@@ -10,7 +10,7 @@ import (
 	"syscall"
 )
 
-func ploopRunCmd(stdout io.Writer, args ...string) error {
+func ploopRunCmd(ploopCmd string, stdout io.Writer, args ...string) error {
 	if verbosity != unsetVerbosity {
 		if !strings.HasPrefix(args[0], "-v") {
 			args = append(verbosityOpt, args...)
@@ -20,12 +20,12 @@ func ploopRunCmd(stdout io.Writer, args ...string) error {
 		}
 	}
 	var stderr bytes.Buffer
-	cmd := exec.Command("ploop", args...)
+	cmd := exec.Command(ploopCmd, args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = &stderr
 
 	if verbosity >= ShowCommands {
-		fmt.Printf("Run: %s\n", strings.Join([]string{cmd.Path, strings.Join(cmd.Args[1:], " ")}, " "))
+		fmt.Printf("Run: %s %s %s\n", ploopCmd, cmd.Path, strings.Join(cmd.Args[1:], " "))
 	}
 
 	err := cmd.Run()
@@ -47,7 +47,7 @@ func ploopRunCmd(stdout io.Writer, args ...string) error {
 }
 
 func ploop(args ...string) error {
-	return ploopRunCmd(nil, args...)
+	return ploopRunCmd("ploop", nil, args...)
 }
 
 func ploopOut(args ...string) (string, error) {
@@ -57,11 +57,15 @@ func ploopOut(args ...string) (string, error) {
 		v := []string{"-v0"}
 		args = append(v, args...)
 	}
-	ret := ploopRunCmd(&stdout, args...)
+	ret := ploopRunCmd("ploop", &stdout, args...)
 	out := stdout.String()
 	// if verbosity requires so, print command's stdout
 	if verbosity > NoStdout {
 		fmt.Printf("%s", out)
 	}
 	return out, ret
+}
+
+func ploopVolume(args ...string) error {
+	return ploopRunCmd("ploop-volume", nil, args...)
 }
